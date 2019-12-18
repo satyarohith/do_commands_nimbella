@@ -144,8 +144,8 @@ async function main(params) {
      Current: $${dropletsCost.current}
      Projected: $${dropletsCost.projected}
     *Databases*
-     Current: ${databasesCost.current}
-     Projected: ${databasesCost.projected}
+     Current: $${databasesCost.current}
+     Projected: $${databasesCost.projected}
     `;
   } catch (err) {
     error = `*ERROR:* ${err.message}`;
