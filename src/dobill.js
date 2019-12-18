@@ -66,25 +66,15 @@ function calcDropletsCost(droplets = []) {
 }
 
 function calcDBCosts(databases = []) {
-  // DigitalOcean doesn't provied hourly rates of dbs via API, so we need to hardcode these.
-  const dbprices = {
-    'db-s-1vcpu-1gb': {
-      1: 0.022
-    },
-    'db-s-1vcpu-2gb': {
-      1: 0.045,
-      2: 0.074,
-      3: 0.104
-    },
-    'db-s-2vcpu-4gb': {
-      1: 0.089,
-      2: 0.149,
-      3: 0.208
-    },
-    'db-s-4vcpu-8gb': {1: 0},
-    'db-s-6vcpu-16gb': {1: 0},
-    'db-s-8vcpu-32gb': {1: 0},
-    'db-s-16vcpu-64gb': {1: 0}
+  // DigitalOcean doesn't provide hourly rates of database clusters via API, so we need to hardcode them.
+  const dbPriceIndex = {
+    'db-s-1vcpu-1gb': {1: 0.022},
+    'db-s-1vcpu-2gb': {1: 0.045, 2: 0.074, 3: 0.104},
+    'db-s-2vcpu-4gb': {1: 0.089, 2: 0.149, 3: 0.208},
+    'db-s-4vcpu-8gb': {1: 0.179, 2: 0.298, 3: 0.417},
+    'db-s-6vcpu-16gb': {1: 0.357, 2: 0.595, 3: 0.833},
+    'db-s-8vcpu-32gb': {1: 0.714, 2: 1.19, 3: 1.667},
+    'db-s-16vcpu-64gb': {1: 2.381, 2: 3.333}
   };
 
   let currentCost = 0;
@@ -95,7 +85,7 @@ function calcDBCosts(databases = []) {
   for (let i = 0; i < databases.length; i++) {
     let hoursRun = 0;
     // Retrieve the hourly price based on size slug and number of nodes running.
-    const hourlyPrice = dbprices[databases[i].size][databases[i].num_nodes];
+    const hourlyPrice = dbPriceIndex[databases[i].size][databases[i].num_nodes];
     const databaseCreatedDate = new Date(databases[i].created_at);
     // If the database cluster is created after 1st of a month, then calculate price based on the created date.
     if (databaseCreatedDate > firstOfThisMonth) {
