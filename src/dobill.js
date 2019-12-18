@@ -108,8 +108,10 @@ async function main(params) {
   const {digitaloceanApiKey} = params.__secrets;
   if (!digitaloceanApiKey) {
     return {
-      text:
-        'You need `digitaloceanApiKey` secret to run this command. Create one by running `/nc secret_create`.'
+      body: {
+        text:
+          'You need `digitaloceanApiKey` secret to run this command. Create one by running `/nc secret_create`.'
+      }
     };
   }
 
