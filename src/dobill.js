@@ -134,9 +134,12 @@ async function main(params) {
     const dropletsCost = calcDropletsCost(droplets);
     const databasesCost = calcDBCosts(databases);
 
-    const totalCurrentCosts = dropletsCost.current + databasesCost.current;
-    const totalProjectedCosts =
-      dropletsCost.projected + databasesCost.projected;
+    const totalCurrentCosts = (
+      dropletsCost.current + databasesCost.current
+    ).toFixed(2);
+    const totalProjectedCosts = (
+      dropletsCost.projected + databasesCost.projected
+    ).toFixed(2);
 
     result = `
     Total Costs so far: $${totalCurrentCosts}\nProjected Costs for this month: $${totalProjectedCosts}
