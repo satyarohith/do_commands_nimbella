@@ -1,0 +1,5 @@
+sourceBasePath: https://raw.githubusercontent.com/satyarohith/do_commands_nimbella/master/src
+commands:
+  dobill:
+    sourcePath: /dobill.js
+    description: Shows your DigitalOcean bill
