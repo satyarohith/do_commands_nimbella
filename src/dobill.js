@@ -149,6 +149,8 @@ async function main(params) {
     *Databases*
      Current: $${databasesCost.current}
      Projected: $${databasesCost.projected}
+
+    *Note*: It only calculates costs of currently active resources.
     `;
   } catch (err) {
     error = `*ERROR:* ${err.message}`;
