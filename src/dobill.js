@@ -218,6 +218,11 @@ function calcBackupsCost(droplets = []) {
   let projectedCost = 0;
   const today = new Date();
   const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstOfNextMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    1
+  );
 
   for (let i = 0; i < droplets.length; i++) {
     if (droplets[i].features.includes('backups')) {
@@ -230,14 +235,17 @@ function calcBackupsCost(droplets = []) {
       // If the droplet is created after 1st of a month, then calculate number of backups based on the creation date.
       if (dropletCreatedDate > firstOfThisMonth) {
         numberOfBackups = calcWeeks(dropletCreatedDate);
+        // Total weeks from droplet creation date to the end of month.
+        let projectedWeeks = calcWeeks(firstOfNextMonth, dropletCreatedDate);
+        projectedWeeks = projectedWeeks < 4 ? projectedWeeks : 4;
+        projectedCost += Number((projectedWeeks * backupPrice).toFixed(2));
       } else {
         numberOfBackups = calcWeeks(firstOfThisMonth);
+        projectedCost += Number((4 * backupPrice).toFixed(2));
       }
 
       numberOfBackups = numberOfBackups > 4 ? 4 : numberOfBackups;
-
       currentCost += Number((numberOfBackups * backupPrice).toFixed(2));
-      projectedCost += Number((4 * backupPrice).toFixed(2));
     }
   }
 
