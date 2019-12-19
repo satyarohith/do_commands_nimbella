@@ -261,8 +261,7 @@ async function _command(params, commandText, secrets = {}) {
     };
   }
 
-  let result = [];
-  let error = '';
+  const result = [];
   const BASE_URL = 'https://api.digitalocean.com/v2';
   const headers = {
     'Content-Type': 'application/json',
@@ -304,54 +303,131 @@ async function _command(params, commandText, secrets = {}) {
       backupsCost.projected
     ).toFixed(2);
 
-    result = [
-      `Total Costs: $${totalCurrentCosts} Projected Costs for this month: $${totalProjectedCosts}\n`
-    ];
+    const today = new Date();
+    const monthYear = String(today.getMonth() + 1) + '/' + today.getFullYear();
+
+    result.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `Total Costs: $${totalCurrentCosts} Projected Costs (${monthYear}): $${totalProjectedCosts}`
+      }
+    });
 
     if (dropletsCost.projected > 0) {
-      result.push(
-        `*Droplets* Current: $${dropletsCost.current.toFixed(
-          2
-        )} Projected: $${dropletsCost.projected.toFixed(2)}\n`
-      );
+      result.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            // Maintain a uniform column length of 15
+            text: '*Droplets*      '
+          },
+          {
+            type: 'mrkdwn',
+            text: `Current: $${dropletsCost.current.toFixed(2)}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `Projected: $${dropletsCost.projected.toFixed(2)}`
+          }
+        ]
+      });
     }
 
     if (volumesCost.projected > 0) {
-      result.push(
-        `*Block Storage* Current: $${volumesCost.current.toFixed(
-          2
-        )} Projected: $${volumesCost.projected.toFixed(2)}\n`
-      );
+      result.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '*Volumes*      '
+          },
+          {
+            type: 'mrkdwn',
+            text: `Current: $${volumesCost.current.toFixed(2)}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `Projected: $${volumesCost.projected.toFixed(2)}`
+          }
+        ]
+      });
     }
 
     if (databasesCost.projected > 0) {
-      result.push(
-        `*Databases* Current: $${databasesCost.current.toFixed(
-          2
-        )} Projected: $${databasesCost.projected.toFixed(2)}\n`
-      );
+      result.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '*Databases*    '
+          },
+          {
+            type: 'mrkdwn',
+            text: `Current: $${databasesCost.current.toFixed(2)}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `Projected: $${databasesCost.projected.toFixed(2)}`
+          }
+        ]
+      });
     }
 
     if (snapshotsCost.projected > 0) {
-      result.push(
-        `*Snapshots* Current: $${snapshotsCost.current.toFixed(
-          2
-        )} Projected: $${snapshotsCost.projected.toFixed(2)}\n`
-      );
+      result.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '*Snapshots*    '
+          },
+          {
+            type: 'mrkdwn',
+            text: `Current: $${snapshotsCost.current.toFixed(2)}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `Projected: $${snapshotsCost.projected.toFixed(2)}`
+          }
+        ]
+      });
     }
 
     if (backupsCost.projected > 0) {
-      result.push(
-        `*Backups* Current: $${backupsCost.current.toFixed(
-          2
-        )} Projected: $${backupsCost.projected.toFixed(2)}\n`
-      );
+      result.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '*Backups*      '
+          },
+          {
+            type: 'mrkdwn',
+            text: `Current: $${backupsCost.current.toFixed(2)}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `Projected: $${backupsCost.projected.toFixed(2)}`
+          }
+        ]
+      });
     }
   } catch (err) {
-    error = `*ERROR:* ${err.message}`;
+    result.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*ERROR:* ${err.message}`
+      }
+    });
   }
 
-  return {response_type: 'in_channel', text: error ? error : result.join('')};
+  return {
+    response_type: 'in_channel',
+    blocks: result
+  };
 }
 
 const main = async ({__secrets = {}, commandText, ...params}) => ({
