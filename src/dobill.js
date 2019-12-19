@@ -26,19 +26,31 @@ const getContent = function(url, headers) {
 };
 
 /**
- * Calculates the difference between Date.now() and date provided in hours.
- * @param {Date} date - A valid date object.
+ * Calculates the difference between date1 and date2 in hours.
+ * Or calculates the difference between Date.now() and date1 when date2 is not provided.
+ * @param {Date} date1 - A valid minuend date object.
+ * @param {Date} [date2] - A valid subtrahend date object.
  */
-const calcHours = date => {
-  return Math.ceil(Math.abs(Date.now() - date) / 36e5);
+const calcHours = (date1, date2) => {
+  if (!date2) {
+    return Math.ceil(Math.abs(Date.now() - date1) / 36e5);
+  }
+
+  return Math.ceil(Math.abs(date1 - date2) / 36e5);
 };
 
 /**
- * Calculates the differnce between Date.now() and date provided in weeks.
- * @param {Date} date - A valid date object.
+ * Calculates the difference between date1 and date2 in weeks.
+ * Or calculates the difference between Date.now() and date1 when date2 is not provided.
+ * @param {Date} date1 - A valid minuend date object.
+ * @param {Date} [date2] - A valid subtrahend date object.
  */
-const calcWeeks = date => {
-  return Math.ceil(Math.abs(Date.now() - date) / 6048e5);
+const calcWeeks = (date1, date2) => {
+  if (!date2) {
+    return Math.ceil(Math.abs(Date.now() - date1) / 6048e5);
+  }
+
+  return Math.ceil(Math.abs(date1 - date2) / 6048e5);
 };
 
 /**
