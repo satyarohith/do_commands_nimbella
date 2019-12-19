@@ -104,14 +104,12 @@ function calcDBCosts(databases = []) {
   return {current: currentCost, projected: projectedCost};
 }
 
-async function main(params) {
-  const {digitaloceanApiKey} = params.__secrets;
+async function _command(params, commandText, secrets = {}) {
+  const {digitaloceanApiKey} = secrets;
   if (!digitaloceanApiKey) {
     return {
-      body: {
-        text:
-          'You need `digitaloceanApiKey` secret to run this command. Create one by running `/nc secret_create`.'
-      }
+      text:
+        'You need `digitaloceanApiKey` secret to run this command. Create one by running `/nc secret_create`.'
     };
   }
 
@@ -156,7 +154,10 @@ async function main(params) {
     error = `*ERROR:* ${err.message}`;
   }
 
-  return {
-    body: {response_type: 'in_channel', text: error ? error : result}
-  };
+  return {response_type: 'in_channel', text: error ? error : result};
 }
+
+const main = async ({__secrets = {}, commandText, ...params}) => ({
+  body: await _command(params, commandText, __secrets)
+});
+module.exports = main;
