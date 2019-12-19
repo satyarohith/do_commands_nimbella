@@ -182,24 +182,32 @@ function calcSnapshotsCost(snapshots = []) {
   let projectedCost = 0;
   const today = new Date();
   const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstOfNextMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    1
+  );
 
   for (let i = 0; i < snapshots.length; i++) {
     let hoursRun = 0;
     // DO charges $0.05/GB per month (672 hours) for snapshots.
     const hourlyPrice = (snapshots[i].size_gigabytes * 0.05) / 672;
-    const volumeCreatedDate = new Date(snapshots[i].created_at);
-    // If the volume is created after 1st of a month, then calculate price based on the created date.
-    if (volumeCreatedDate > firstOfThisMonth) {
-      hoursRun = calcHours(volumeCreatedDate);
+    const snapshotCreatedDate = new Date(snapshots[i].created_at);
+    // If the snapshot is taken after 1st of a month, then calculate price based on the created date.
+    if (snapshotCreatedDate > firstOfThisMonth) {
+      hoursRun = calcHours(snapshotCreatedDate);
+      // Total hours from the creation of volume to the end of the month.
+      let projectedHours = calcHours(firstOfNextMonth, snapshotCreatedDate);
+      projectedHours = projectedHours < 672 ? projectedHours : 672;
+      projectedCost += Number((projectedHours * hourlyPrice).toFixed(2));
     } else {
       hoursRun = calcHours(firstOfThisMonth);
+      projectedCost += Number((672 * hourlyPrice).toFixed(2));
     }
 
     // During billing, DigitalOcean caps the number of hours ran to 672.
     hoursRun = hoursRun > 672 ? 672 : hoursRun;
-
     currentCost += Number((hoursRun * hourlyPrice).toFixed(2));
-    projectedCost += Number((672 * hourlyPrice).toFixed(2));
   }
 
   return {current: currentCost, projected: projectedCost};
