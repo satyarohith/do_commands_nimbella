@@ -140,6 +140,65 @@ function calcVolumesCost(volumes = []) {
   return {current: currentCost, projected: projectedCost};
 }
 
+function calcSnapshotsCost(snapshots = []) {
+  let currentCost = 0;
+  let projectedCost = 0;
+  const today = new Date();
+  const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  for (let i = 0; i < snapshots.length; i++) {
+    let hoursRun = 0;
+    // DO charges $0.05/GB per month (672 hours) for snapshots.
+    const hourlyPrice = (snapshots[i].size_gigabytes * 0.05) / 672;
+    const volumeCreatedDate = new Date(snapshots[i].created_at);
+    // If the volume is created after 1st of a month, then calculate price based on the created date.
+    if (volumeCreatedDate > firstOfThisMonth) {
+      hoursRun = calcHours(volumeCreatedDate);
+    } else {
+      hoursRun = calcHours(firstOfThisMonth);
+    }
+
+    // During billing, DigitalOcean caps the number of hours ran to 672.
+    hoursRun = hoursRun > 672 ? 672 : hoursRun;
+
+    currentCost += Number((hoursRun * hourlyPrice).toFixed(2));
+    projectedCost += Number((672 * hourlyPrice).toFixed(2));
+  }
+
+  return {current: currentCost, projected: projectedCost};
+}
+
+function calcBackupsCost(droplets = []) {
+  let currentCost = 0;
+  let projectedCost = 0;
+  const today = new Date();
+  const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  for (let i = 0; i < droplets.length; i++) {
+    if (droplets[i].features.includes('backups')) {
+      const dropletCreatedDate = new Date(droplets[i].created_at);
+      const hourlyPriceOfDroplet = droplets[i].size.price_hourly;
+      // Each backup costs 5% of the droplet price. They're taken 4 times a month. So at max, they cost 20% of the droplet price.
+      const backupPrice = ((hourlyPriceOfDroplet * 672) / 100) * 5;
+      let numberOfBackups = 0;
+
+      // If the droplet is created after 1st of a month, then calculate number of backups based on the creation date.
+      if (dropletCreatedDate > firstOfThisMonth) {
+        numberOfBackups = calcWeeks(dropletCreatedDate);
+      } else {
+        numberOfBackups = calcWeeks(firstOfThisMonth);
+      }
+
+      numberOfBackups = numberOfBackups > 4 ? 4 : numberOfBackups;
+
+      currentCost += Number((numberOfBackups * backupPrice).toFixed(2));
+      projectedCost += Number((4 * backupPrice).toFixed(2));
+    }
+  }
+
+  return {current: currentCost, projected: projectedCost};
+}
+
 async function _command(params, commandText, secrets = {}) {
   const {digitaloceanApiKey} = secrets;
   if (!digitaloceanApiKey) {
@@ -167,20 +226,29 @@ async function _command(params, commandText, secrets = {}) {
     const {volumes} = JSON.parse(
       await getContent(BASE_URL + '/volumes?per_page=50', headers)
     );
+    const {snapshots} = JSON.parse(
+      await getContent(BASE_URL + '/snapshots?per_page=100', headers)
+    );
 
     const dropletsCost = calcDropletsCost(droplets);
     const databasesCost = calcDBCosts(databases);
     const volumesCost = calcVolumesCost(volumes);
+    const snapshotsCost = calcSnapshotsCost(snapshots);
+    const backupsCost = calcBackupsCost(droplets);
 
     const totalCurrentCosts = (
       dropletsCost.current +
       databasesCost.current +
-      volumesCost.current
+      volumesCost.current +
+      snapshotsCost.current +
+      backupsCost.current
     ).toFixed(2);
     const totalProjectedCosts = (
       dropletsCost.projected +
       databasesCost.projected +
-      volumesCost.projected
+      volumesCost.projected +
+      snapshotsCost.projected +
+      backupsCost.projected
     ).toFixed(2);
 
     result = `
@@ -194,7 +262,12 @@ async function _command(params, commandText, secrets = {}) {
     *Block Storage*
      Current: $${volumesCost.current.toFixed(2)}
      Projected: $${volumesCost.projected.toFixed(2)}
-
+    *Snapshots*
+     Current: $${snapshotsCost.current.toFixed(2)}
+     Projected: $${snapshotsCost.projected.toFixed(2)}
+    *Backups*
+     Current: $${backupsCost.current.toFixed(2)}
+     Projected: $${backupsCost.projected.toFixed(2)}
     *Note*: It only calculates costs of currently active resources.
     `;
   } catch (err) {
