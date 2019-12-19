@@ -104,6 +104,34 @@ function calcDBCosts(databases = []) {
   return {current: currentCost, projected: projectedCost};
 }
 
+function calcVolumesCost(volumes = []) {
+  let currentCost = 0;
+  let projectedCost = 0;
+  const today = new Date();
+  const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  for (let i = 0; i < volumes.length; i++) {
+    let hoursRun = 0;
+    // DO charges $0.10/GB per month (672 hours). So calculate an approximate hourly price based on it.
+    const hourlyPrice = (volumes[i].size_gigabytes * 0.1) / 672;
+    const volumeCreatedDate = new Date(volumes[i].created_at);
+    // If the volume is created after 1st of a month, then calculate price based on the created date.
+    if (volumeCreatedDate > firstOfThisMonth) {
+      hoursRun = calcHours(volumeCreatedDate);
+    } else {
+      hoursRun = calcHours(firstOfThisMonth);
+    }
+
+    // During billing, DigitalOcean caps the number of hours ran to 672.
+    hoursRun = hoursRun > 672 ? 672 : hoursRun;
+
+    currentCost += Number((hoursRun * hourlyPrice).toFixed(2));
+    projectedCost += Number((672 * hourlyPrice).toFixed(2));
+  }
+
+  return {current: currentCost, projected: projectedCost};
+}
+
 async function _command(params, commandText, secrets = {}) {
   const {digitaloceanApiKey} = secrets;
   if (!digitaloceanApiKey) {
@@ -128,25 +156,36 @@ async function _command(params, commandText, secrets = {}) {
     const {databases} = JSON.parse(
       await getContent(BASE_URL + '/databases?per_page=50', headers)
     );
+    const {volumes} = JSON.parse(
+      await getContent(BASE_URL + '/volumes?per_page=50', headers)
+    );
 
     const dropletsCost = calcDropletsCost(droplets);
     const databasesCost = calcDBCosts(databases);
+    const volumesCost = calcVolumesCost(volumes);
 
     const totalCurrentCosts = (
-      dropletsCost.current + databasesCost.current
+      dropletsCost.current +
+      databasesCost.current +
+      volumesCost.current
     ).toFixed(2);
     const totalProjectedCosts = (
-      dropletsCost.projected + databasesCost.projected
+      dropletsCost.projected +
+      databasesCost.projected +
+      volumesCost.projected
     ).toFixed(2);
 
     result = `
     Total Costs so far: $${totalCurrentCosts}\nProjected Costs for this month: $${totalProjectedCosts}
     *Droplets*
-     Current: $${dropletsCost.current}
-     Projected: $${dropletsCost.projected}
+     Current: $${dropletsCost.current.toFixed(2)}
+     Projected: $${dropletsCost.projected.toFixed(2)}
     *Databases*
-     Current: $${databasesCost.current}
-     Projected: $${databasesCost.projected}
+     Current: $${databasesCost.current.toFixed(2)}
+     Projected: $${databasesCost.projected.toFixed(2)}
+    *Block Storage*
+     Current: $${volumesCost.current.toFixed(2)}
+     Projected: $${volumesCost.projected.toFixed(2)}
 
     *Note*: It only calculates costs of currently active resources.
     `;
