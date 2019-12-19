@@ -62,6 +62,12 @@ function calcDropletsCost(droplets = []) {
   let projectedCost = 0;
   const today = new Date();
   const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstOfNextMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    1
+  );
+
   for (let i = 0; i < droplets.length; i++) {
     const dropletCreatedDate = new Date(droplets[i].created_at);
     // Hourly price of the droplet.
@@ -71,15 +77,18 @@ function calcDropletsCost(droplets = []) {
     // If the droplet is created after 1st of a month, then calculate price based on the created date.
     if (dropletCreatedDate > firstOfThisMonth) {
       hoursRun = calcHours(dropletCreatedDate);
+      // Total hours from the creation of droplet to the end of the month.
+      let projectedHours = calcHours(firstOfNextMonth, dropletCreatedDate);
+      projectedHours = projectedHours < 672 ? projectedHours : 672;
+      projectedCost += Number((projectedHours * hourlyPrice).toFixed(2));
     } else {
       hoursRun = calcHours(firstOfThisMonth);
+      projectedCost += Number((672 * hourlyPrice).toFixed(2));
     }
 
     // During billing, DigitalOcean caps the number of hours ran to 672.
     hoursRun = hoursRun > 672 ? 672 : hoursRun;
-
     currentCost += Number((hoursRun * hourlyPrice).toFixed(2));
-    projectedCost += Number((672 * hourlyPrice).toFixed(2));
   }
 
   return {current: currentCost, projected: projectedCost};
