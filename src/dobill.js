@@ -261,7 +261,7 @@ async function _command(params, commandText, secrets = {}) {
     };
   }
 
-  let result = '';
+  let result = [];
   let error = '';
   const BASE_URL = 'https://api.digitalocean.com/v2';
   const headers = {
@@ -304,30 +304,54 @@ async function _command(params, commandText, secrets = {}) {
       backupsCost.projected
     ).toFixed(2);
 
-    result = `
-    Total Costs so far: $${totalCurrentCosts}\nProjected Costs for this month: $${totalProjectedCosts}
-    *Droplets*
-     Current: $${dropletsCost.current.toFixed(2)}
-     Projected: $${dropletsCost.projected.toFixed(2)}
-    *Databases*
-     Current: $${databasesCost.current.toFixed(2)}
-     Projected: $${databasesCost.projected.toFixed(2)}
-    *Block Storage*
-     Current: $${volumesCost.current.toFixed(2)}
-     Projected: $${volumesCost.projected.toFixed(2)}
-    *Snapshots*
-     Current: $${snapshotsCost.current.toFixed(2)}
-     Projected: $${snapshotsCost.projected.toFixed(2)}
-    *Backups*
-     Current: $${backupsCost.current.toFixed(2)}
-     Projected: $${backupsCost.projected.toFixed(2)}
-    *Note*: It only calculates costs of currently active resources.
-    `;
+    result = [
+      `Total Costs: $${totalCurrentCosts} Projected Costs for this month: $${totalProjectedCosts}\n`
+    ];
+
+    if (dropletsCost.projected > 0) {
+      result.push(
+        `*Droplets* Current: $${dropletsCost.current.toFixed(
+          2
+        )} Projected: $${dropletsCost.projected.toFixed(2)}\n`
+      );
+    }
+
+    if (volumesCost.projected > 0) {
+      result.push(
+        `*Block Storage* Current: $${volumesCost.current.toFixed(
+          2
+        )} Projected: $${volumesCost.projected.toFixed(2)}\n`
+      );
+    }
+
+    if (databasesCost.projected > 0) {
+      result.push(
+        `*Databases* Current: $${databasesCost.current.toFixed(
+          2
+        )} Projected: $${databasesCost.projected.toFixed(2)}\n`
+      );
+    }
+
+    if (snapshotsCost.projected > 0) {
+      result.push(
+        `*Snapshots* Current: $${snapshotsCost.current.toFixed(
+          2
+        )} Projected: $${snapshotsCost.projected.toFixed(2)}\n`
+      );
+    }
+
+    if (backupsCost.projected > 0) {
+      result.push(
+        `*Backups* Current: $${backupsCost.current.toFixed(
+          2
+        )} Projected: $${backupsCost.projected.toFixed(2)}\n`
+      );
+    }
   } catch (err) {
     error = `*ERROR:* ${err.message}`;
   }
 
-  return {response_type: 'in_channel', text: error ? error : result};
+  return {response_type: 'in_channel', text: error ? error : result.join('')};
 }
 
 const main = async ({__secrets = {}, commandText, ...params}) => ({
