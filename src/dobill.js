@@ -146,6 +146,11 @@ function calcVolumesCost(volumes = []) {
   let projectedCost = 0;
   const today = new Date();
   const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstOfNextMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    1
+  );
 
   for (let i = 0; i < volumes.length; i++) {
     let hoursRun = 0;
@@ -155,15 +160,18 @@ function calcVolumesCost(volumes = []) {
     // If the volume is created after 1st of a month, then calculate price based on the created date.
     if (volumeCreatedDate > firstOfThisMonth) {
       hoursRun = calcHours(volumeCreatedDate);
+      // Total hours from the creation of volume to the end of the month.
+      let projectedHours = calcHours(firstOfNextMonth, volumeCreatedDate);
+      projectedHours = projectedHours < 672 ? projectedHours : 672;
+      projectedCost += Number((projectedHours * hourlyPrice).toFixed(2));
     } else {
       hoursRun = calcHours(firstOfThisMonth);
+      projectedCost += Number((672 * hourlyPrice).toFixed(2));
     }
 
     // During billing, DigitalOcean caps the number of hours ran to 672.
     hoursRun = hoursRun > 672 ? 672 : hoursRun;
-
     currentCost += Number((hoursRun * hourlyPrice).toFixed(2));
-    projectedCost += Number((672 * hourlyPrice).toFixed(2));
   }
 
   return {current: currentCost, projected: projectedCost};
