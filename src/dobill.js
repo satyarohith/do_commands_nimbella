@@ -27,10 +27,18 @@ const getContent = function(url, headers) {
 
 /**
  * Calculates the difference between Date.now() and date provided in hours.
- * @param {Date} date - Provide the date object
+ * @param {Date} date - A valid date object.
  */
 const calcHours = date => {
   return Math.ceil(Math.abs(Date.now() - date) / 36e5);
+};
+
+/**
+ * Calculates the differnce between Date.now() and date provided in weeks.
+ * @param {Date} date - A valid date object.
+ */
+const calcWeeks = date => {
+  return Math.ceil(Math.abs(Date.now() - date) / 6048e5);
 };
 
 /**
