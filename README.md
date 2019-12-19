@@ -4,7 +4,7 @@ A set of DigitalOcean commands that can be used with Nimbella Commander.
 
 ## Install
 
-First, make sure you've [Nimbella Commander](https://nimbella.com/resources-commander/overview) installed in your slack workspace. Then run:
+First, make sure you've Nimbella Commander installed in your slack workspace. Then run:
 ```
 /nc csm_install github:satyarohith/do_commands_nimbella
 ```
