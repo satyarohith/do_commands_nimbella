@@ -1,9 +1,13 @@
-// jshint esversion: 9
+'use strict';
 
-// This code is from: https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
-// it allows us to do a promise https request without any dependencies
-
-const getContent = function(url, headers) {
+/**
+ * Makes an https GET request.
+ * @param {string} url - The request URL
+ * @param {{}} headers - Headers that need to be set while making a request.
+ * @returns {Promise} - The result wrapped in a promise object.
+ * @see {@link https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/}
+ */
+const getContent = (url, headers) => {
   // return new pending promise
   return new Promise((resolve, reject) => {
     const request = require('https').get(url, {headers}, response => {
@@ -30,6 +34,7 @@ const getContent = function(url, headers) {
  * Or calculates the difference between Date.now() and date1 when date2 is not provided.
  * @param {Date} date1 - A valid minuend date object.
  * @param {Date} [date2] - A valid subtrahend date object.
+ * @returns {number} - The difference in hours.
  */
 const calcHours = (date1, date2) => {
   if (!date2) {
@@ -44,6 +49,7 @@ const calcHours = (date1, date2) => {
  * Or calculates the difference between Date.now() and date1 when date2 is not provided.
  * @param {Date} date1 - A valid minuend date object.
  * @param {Date} [date2] - A valid subtrahend date object.
+ * @returns {number} - The difference in weeks.
  */
 const calcWeeks = (date1, date2) => {
   if (!date2) {
@@ -54,10 +60,11 @@ const calcWeeks = (date1, date2) => {
 };
 
 /**
- * Calculates the cost incurred for running all the droplets under an account.
- * @param {array} droplets - An array containing all the droplets under an account.
+ * Calculates the costs of currently running droplets under an account.
+ * @param {array} droplets - The droplets array returned by the DO API.
+ * @returns {{current: number, projected: number}} - An object containing the projected and current costs of droplets.
  */
-function calcDropletsCost(droplets = []) {
+const calcDropletsCost = (droplets = []) => {
   let currentCost = 0;
   let projectedCost = 0;
   const today = new Date();
@@ -92,9 +99,14 @@ function calcDropletsCost(droplets = []) {
   }
 
   return {current: currentCost, projected: projectedCost};
-}
+};
 
-function calcDBCosts(databases = []) {
+/**
+ * Calculates the cost of currently running databases under an account.
+ * @param {array} databases - The databases array returned by the DO API.
+ * @returns {{current: number, projected: number}} - An object containing the projected and current costs of databases.
+ */
+const calcDBCosts = (databases = []) => {
   // DigitalOcean doesn't provide hourly rates of database clusters via API, so we need to hardcode them.
   const dbPriceIndex = {
     'db-s-1vcpu-1gb': {1: 0.022},
@@ -139,9 +151,14 @@ function calcDBCosts(databases = []) {
   }
 
   return {current: currentCost, projected: projectedCost};
-}
+};
 
-function calcVolumesCost(volumes = []) {
+/**
+ * Calculates the costs of currently active volumes under an account.
+ * @param {array} volumes - The volumes array returned by the DO API.
+ * @returns {{current: number, projected: number}} - An object containing the projected and current costs of volumes.
+ */
+const calcVolumesCost = (volumes = []) => {
   let currentCost = 0;
   let projectedCost = 0;
   const today = new Date();
@@ -175,9 +192,14 @@ function calcVolumesCost(volumes = []) {
   }
 
   return {current: currentCost, projected: projectedCost};
-}
+};
 
-function calcSnapshotsCost(snapshots = []) {
+/**
+ * Calculates the costs of snapshots under an account.
+ * @param {array} snapshots - The snapshots array returned by the DO API.
+ * @returns {{current: number, projected: number}} - An object containing the projected and current costs of snapshots.
+ */
+const calcSnapshotsCost = (snapshots = []) => {
   let currentCost = 0;
   let projectedCost = 0;
   const today = new Date();
@@ -211,9 +233,14 @@ function calcSnapshotsCost(snapshots = []) {
   }
 
   return {current: currentCost, projected: projectedCost};
-}
+};
 
-function calcBackupsCost(droplets = []) {
+/**
+ * Calculates the costs of droplet backups under an account.
+ * @param {array} droplets - The droplets array returned by the DO API.
+ * @returns {{current: number, projected: number}} - An object containing the projected and current costs of backups.
+ */
+const calcBackupsCost = (droplets = []) => {
   let currentCost = 0;
   let projectedCost = 0;
   const today = new Date();
@@ -250,7 +277,7 @@ function calcBackupsCost(droplets = []) {
   }
 
   return {current: currentCost, projected: projectedCost};
-}
+};
 
 const _command = async (params, commandText, secrets = {}) => {
   const {digitaloceanApiKey} = secrets;
@@ -449,7 +476,7 @@ const _command = async (params, commandText, secrets = {}) => {
     response_type: 'in_channel',
     blocks: result
   };
-}
+};
 
 const main = async ({__secrets = {}, commandText, ...params}) => ({
   body: await _command(params, commandText, __secrets)
