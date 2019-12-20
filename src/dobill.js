@@ -8,23 +8,24 @@
  * @see {@link https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/}
  */
 const getContent = (url, headers) => {
-  // return new pending promise
+  // Return new pending promise
   return new Promise((resolve, reject) => {
     const request = require('https').get(url, {headers}, response => {
-      // handle http errors
+      // Handle http errors
       if (response.statusCode < 200 || response.statusCode > 299) {
         reject(
           new Error('Failed to load page, status code: ' + response.statusCode)
         );
       }
-      // temporary data holder
+
+      // Temporary data holder
       const body = [];
-      // on every content chunk, push it to the data array
+      // On every content chunk, push it to the data array
       response.on('data', chunk => body.push(chunk));
-      // we are done, resolve promise with those joined chunks
+      // We are done, resolve promise with those joined chunks
       response.on('end', () => resolve(body.join('')));
     });
-    // handle connection errors of the request
+    // Handle connection errors of the request
     request.on('error', err => reject(err));
   });
 };
@@ -75,10 +76,10 @@ const calcDropletsCost = (droplets = []) => {
     1
   );
 
-  for (let i = 0; i < droplets.length; i++) {
-    const dropletCreatedDate = new Date(droplets[i].created_at);
+  for (const droplet of droplets) {
+    const dropletCreatedDate = new Date(droplet.created_at);
     // Hourly price of the droplet.
-    const hourlyPrice = droplets[i].size.price_hourly;
+    const hourlyPrice = droplet.size.price_hourly;
     let hoursRun = 0;
 
     // If the droplet is created after 1st of a month, then calculate price based on the created date.
@@ -128,11 +129,11 @@ const calcDBCosts = (databases = []) => {
     1
   );
 
-  for (let i = 0; i < databases.length; i++) {
+  for (const database of databases) {
     let hoursRun = 0;
     // Retrieve the hourly price based on size slug and number of nodes running.
-    const hourlyPrice = dbPriceIndex[databases[i].size][databases[i].num_nodes];
-    const databaseCreatedDate = new Date(databases[i].created_at);
+    const hourlyPrice = dbPriceIndex[database.size][database.num_nodes];
+    const databaseCreatedDate = new Date(database.created_at);
     // If the database cluster is created after 1st of a month, then calculate price based on the created date.
     if (databaseCreatedDate > firstOfThisMonth) {
       hoursRun = calcHours(databaseCreatedDate);
@@ -169,11 +170,11 @@ const calcVolumesCost = (volumes = []) => {
     1
   );
 
-  for (let i = 0; i < volumes.length; i++) {
+  for (const volume of volumes) {
     let hoursRun = 0;
     // DO charges $0.10/GB per month (672 hours). So calculate an approximate hourly price based on it.
-    const hourlyPrice = (volumes[i].size_gigabytes * 0.1) / 672;
-    const volumeCreatedDate = new Date(volumes[i].created_at);
+    const hourlyPrice = (volume.size_gigabytes * 0.1) / 672;
+    const volumeCreatedDate = new Date(volume.created_at);
     // If the volume is created after 1st of a month, then calculate price based on the created date.
     if (volumeCreatedDate > firstOfThisMonth) {
       hoursRun = calcHours(volumeCreatedDate);
@@ -210,11 +211,11 @@ const calcSnapshotsCost = (snapshots = []) => {
     1
   );
 
-  for (let i = 0; i < snapshots.length; i++) {
+  for (const snapshot of snapshots) {
     let hoursRun = 0;
     // DO charges $0.05/GB per month (672 hours) for snapshots.
-    const hourlyPrice = (snapshots[i].size_gigabytes * 0.05) / 672;
-    const snapshotCreatedDate = new Date(snapshots[i].created_at);
+    const hourlyPrice = (snapshot.size_gigabytes * 0.05) / 672;
+    const snapshotCreatedDate = new Date(snapshot.created_at);
     // If the snapshot is taken after 1st of a month, then calculate price based on the created date.
     if (snapshotCreatedDate > firstOfThisMonth) {
       hoursRun = calcHours(snapshotCreatedDate);
@@ -253,11 +254,11 @@ const calcBackupsCost = (droplets = []) => {
     1
   );
 
-  for (let i = 0; i < droplets.length; i++) {
-    if (droplets[i].features.includes('backups')) {
-      totalBackups += droplets[i].backup_ids.length;
-      const dropletCreatedDate = new Date(droplets[i].created_at);
-      const hourlyPriceOfDroplet = droplets[i].size.price_hourly;
+  for (const droplet of droplets) {
+    if (droplet.features.includes('backups')) {
+      totalBackups += droplet.backup_ids.length;
+      const dropletCreatedDate = new Date(droplet.created_at);
+      const hourlyPriceOfDroplet = droplet.size.price_hourly;
       // Each backup costs 5% of the droplet price. They're taken 4 times a month. So at max, they cost 20% of the droplet price.
       const backupPrice = ((hourlyPriceOfDroplet * 672) / 100) * 5;
       let numberOfBackups = 0;
@@ -468,18 +469,18 @@ const _command = async (params, commandText, secrets = {}) => {
         ]
       });
     }
-  } catch (err) {
+  } catch (error) {
     result.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*ERROR:* ${err.message}`
+        text: `*ERROR:* ${error.message}`
       }
     });
   }
 
   return {
-    response_type: 'in_channel',
+    response_type: 'in_channel', // eslint-disable-line camelcase
     blocks: result
   };
 };
