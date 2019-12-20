@@ -252,7 +252,7 @@ function calcBackupsCost(droplets = []) {
   return {current: currentCost, projected: projectedCost};
 }
 
-async function _command(params, commandText, secrets = {}) {
+const _command = async (params, commandText, secrets = {}) => {
   const {digitaloceanApiKey} = secrets;
   if (!digitaloceanApiKey) {
     return {
@@ -269,18 +269,39 @@ async function _command(params, commandText, secrets = {}) {
   };
 
   try {
-    const {droplets} = JSON.parse(
-      await getContent(BASE_URL + '/droplets?per_page=50', headers)
+    const dropletsRequest = getContent(
+      BASE_URL + '/droplets?per_page=100',
+      headers
     );
-    const {databases} = JSON.parse(
-      await getContent(BASE_URL + '/databases?per_page=50', headers)
+    const databasesRequest = getContent(
+      BASE_URL + '/databases?per_page=100',
+      headers
     );
-    const {volumes} = JSON.parse(
-      await getContent(BASE_URL + '/volumes?per_page=50', headers)
+    const snapshotsRequest = getContent(
+      BASE_URL + '/snapshots?per_page=100',
+      headers
     );
-    const {snapshots} = JSON.parse(
-      await getContent(BASE_URL + '/snapshots?per_page=100', headers)
+    const volumesRequest = getContent(
+      BASE_URL + '/volumes?per_page=100',
+      headers
     );
+
+    const [
+      dropletsData,
+      databasesData,
+      snapshotsData,
+      volumesData
+    ] = await Promise.all([
+      dropletsRequest,
+      databasesRequest,
+      snapshotsRequest,
+      volumesRequest
+    ]);
+
+    const {droplets} = JSON.parse(dropletsData);
+    const {databases} = JSON.parse(databasesData);
+    const {volumes} = JSON.parse(volumesData);
+    const {snapshots} = JSON.parse(snapshotsData);
 
     const dropletsCost = calcDropletsCost(droplets);
     const databasesCost = calcDBCosts(databases);
