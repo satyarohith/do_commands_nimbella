@@ -243,6 +243,8 @@ const calcSnapshotsCost = (snapshots = []) => {
 const calcBackupsCost = (droplets = []) => {
   let currentCost = 0;
   let projectedCost = 0;
+  let totalBackups = 0;
+
   const today = new Date();
   const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const firstOfNextMonth = new Date(
@@ -253,6 +255,7 @@ const calcBackupsCost = (droplets = []) => {
 
   for (let i = 0; i < droplets.length; i++) {
     if (droplets[i].features.includes('backups')) {
+      totalBackups += droplets[i].backup_ids.length;
       const dropletCreatedDate = new Date(droplets[i].created_at);
       const hourlyPriceOfDroplet = droplets[i].size.price_hourly;
       // Each backup costs 5% of the droplet price. They're taken 4 times a month. So at max, they cost 20% of the droplet price.
@@ -276,7 +279,10 @@ const calcBackupsCost = (droplets = []) => {
     }
   }
 
-  return {current: currentCost, projected: projectedCost};
+  return {
+    backupsCost: {current: currentCost, projected: projectedCost},
+    totalBackups
+  };
 };
 
 const _command = async (params, commandText, secrets = {}) => {
@@ -334,7 +340,7 @@ const _command = async (params, commandText, secrets = {}) => {
     const databasesCost = calcDBCosts(databases);
     const volumesCost = calcVolumesCost(volumes);
     const snapshotsCost = calcSnapshotsCost(snapshots);
-    const backupsCost = calcBackupsCost(droplets);
+    const {backupsCost, totalBackups} = calcBackupsCost(droplets);
 
     const totalCurrentCosts = (
       dropletsCost.current +
@@ -369,7 +375,7 @@ const _command = async (params, commandText, secrets = {}) => {
           {
             type: 'mrkdwn',
             // Maintain a uniform column length of 15
-            text: '*Droplets*      '
+            text: `*Droplets* (${droplets.length})   `
           },
           {
             type: 'mrkdwn',
@@ -389,7 +395,7 @@ const _command = async (params, commandText, secrets = {}) => {
         elements: [
           {
             type: 'mrkdwn',
-            text: '*Volumes*      '
+            text: `*Volumes* (${volumes.length})   `
           },
           {
             type: 'mrkdwn',
@@ -409,7 +415,7 @@ const _command = async (params, commandText, secrets = {}) => {
         elements: [
           {
             type: 'mrkdwn',
-            text: '*Databases*    '
+            text: `*Databases* (${databases.length}) `
           },
           {
             type: 'mrkdwn',
@@ -429,7 +435,7 @@ const _command = async (params, commandText, secrets = {}) => {
         elements: [
           {
             type: 'mrkdwn',
-            text: '*Snapshots*    '
+            text: `*Snapshots* (${snapshots.length})    `
           },
           {
             type: 'mrkdwn',
@@ -449,7 +455,7 @@ const _command = async (params, commandText, secrets = {}) => {
         elements: [
           {
             type: 'mrkdwn',
-            text: '*Backups*      '
+            text: `*Backups* (${totalBackups})  `
           },
           {
             type: 'mrkdwn',
