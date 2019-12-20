@@ -1,0 +1,24 @@
+{
+  "name": "do_commands_nimbella",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:satyarohith/do_commands_nimbella",
+  "author": "Satya Rohith <me@satyarohith.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "xo"
+  },
+  "devDependencies": {
+    "husky": "^3.1.0",
+    "xo": "^0.25.3"
+  },
+  "xo": {
+    "space": true,
+    "prettier": true
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn test"
+    }
+  }
+}
