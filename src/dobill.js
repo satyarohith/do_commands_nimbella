@@ -265,13 +265,17 @@ const calcBackupsCost = (droplets = []) => {
 
       // If the droplet is created after 1st of a month, then calculate number of backups based on the creation date.
       if (dropletCreatedDate > firstOfThisMonth) {
-        numberOfBackups = calcWeeks(dropletCreatedDate);
+        // Function calcWeeks never returns 0 unless both the dates are exactly same.
+        // So we need to make sure the number of backups are greater than zero to consider calcWeek ouput.
+        numberOfBackups =
+          droplet.backup_ids.length === 0 ? 0 : calcWeeks(dropletCreatedDate);
         // Total weeks from droplet creation date to the end of month.
         let projectedWeeks = calcWeeks(firstOfNextMonth, dropletCreatedDate);
         projectedWeeks = projectedWeeks < 4 ? projectedWeeks : 4;
         projectedCost += Number((projectedWeeks * backupPrice).toFixed(2));
       } else {
-        numberOfBackups = calcWeeks(firstOfThisMonth);
+        numberOfBackups =
+          droplet.backup_ids.length === 0 ? 0 : calcWeeks(firstOfThisMonth);
         projectedCost += Number((4 * backupPrice).toFixed(2));
       }
 
